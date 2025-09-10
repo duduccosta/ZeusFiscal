@@ -3,6 +3,8 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
@@ -51,9 +53,12 @@ namespace DFe.Utils
             var keyNomeClasseEmUso = typeof(T).FullName;
 
             XmlSerializer serializador;
-            if(ignorarOrdenacaoElementos) {
+            if (ignorarOrdenacaoElementos)
+            {
                 serializador = XmlOrderFreeSerializerFactory.GetSerializer(typeof(T));
-            } else {
+            }
+            else
+            {
                 serializador = BuscarNoCache(keyNomeClasseEmUso, typeof(T));
             }
 
@@ -78,9 +83,12 @@ namespace DFe.Utils
             var keyNomeClasseEmUso = typeof(T).FullName;
 
             XmlSerializer serializador;
-            if (ignorarOrdenacaoElementos) {
+            if (ignorarOrdenacaoElementos)
+            {
                 serializador = XmlOrderFreeSerializerFactory.GetSerializer(typeof(T));
-            } else {
+            }
+            else
+            {
                 serializador = BuscarNoCache(keyNomeClasseEmUso, typeof(T));
             }
 
@@ -227,5 +235,118 @@ namespace DFe.Utils
                 return ser;
             }
         }
+
+
+
+#if NET5_0_OR_GREATER
+        /// <summary>
+        ///     Serializa a classe passada para uma string no form
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="objeto"></param>
+        /// <returns></returns>
+        public async static Task<string> ClasseParaXmlStringAsync<T>(T objeto, CancellationToken cancellationToken = default)
+        {
+            XElement xml;
+            var keyNomeClasseEmUso = typeof(T).FullName;
+            var ser = BuscarNoCache(keyNomeClasseEmUso, typeof(T));
+
+            using (var memory = new MemoryStream())
+            {
+                using (TextReader tr = new StreamReader(memory, Encoding.UTF8))
+                {
+                    ser.Serialize(memory, objeto);
+                    memory.Position = 0;
+                    xml = await XElement.LoadAsync(tr, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+                    xml.Attributes().Where(x => x.Name.LocalName.Equals("xsd") || x.Name.LocalName.Equals("xsi")).Remove();
+                }
+            }
+            return XElement.Parse(xml.ToString()).ToString(SaveOptions.DisableFormatting);
+        }
+
+        /// <summary>
+        ///     Copia a estrutura e os dados da classe passada para um arquivo XML (Serializa a classe). Use try catch para tratar
+        ///     a possível exceção "DirectoryNotFoundException"
+        /// </summary>
+        /// <typeparam name="T">Classe</typeparam>
+        /// <param name="objeto">Objeto da Classe</param>
+        /// <param name="arquivo">Arquivo XML</param>
+        public async static Task ClasseParaArquivoXmlAsync<T>(T objeto, string arquivo, CancellationToken cancellationToken = default)
+        {
+            var dir = Path.GetDirectoryName(arquivo);
+            if (dir != null && !Directory.Exists(dir))
+                throw new DirectoryNotFoundException("Diretório " + dir + " não encontrado!");
+
+            var xml = await ClasseParaXmlStringAsync(objeto, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                using (var stw = new StreamWriter(arquivo))
+                {
+                    await stw.WriteLineAsync(xml.AsMemory(), cancellationToken).ConfigureAwait(false);
+                    stw.Close();
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception("Não foi possível criar o arquivo " + arquivo + "!");
+            }
+        }
+
+        public async static Task SalvarStringXmlParaArquivoXmlAsync(string xml, string arquivo, CancellationToken cancellationToken = default)
+        {
+            var dir = Path.GetDirectoryName(arquivo);
+            if (dir != null && !Directory.Exists(dir))
+            {
+                throw new DirectoryNotFoundException("Diretório " + dir + " não encontrado!");
+            }
+
+            try
+            {
+                using (var stw = new StreamWriter(arquivo))
+                {
+                    await stw.WriteLineAsync(xml.AsMemory(), cancellationToken).ConfigureAwait(false);
+                    stw.Close();
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception("Não foi possível criar o arquivo " + arquivo + "!");
+            }
+        }
+
+        /// <summary>
+        ///     Obtém um node XML no formato string de um arquivo XML. Util por exemplo, para extrair uma NFe de um XML contendo um
+        ///     nfeproc, enviNFe, etc.
+        /// </summary>
+        /// <param name="nomeDoNode"></param>
+        /// <param name="stream"></param>
+        /// <returns>Retorna a string contendo o node XML cujo strem foi passado no parâmetro nomeDoNode</returns>
+        public async static Task<string> ObterNodeDeStreamAsync(string nomeDoNode, StreamReader stream, CancellationToken cancellationToken = default)
+        {
+            var xmlDoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+
+            var xmlString = (from d in xmlDoc.Descendants()
+                             where d.Name.LocalName == nomeDoNode
+                             select d).FirstOrDefault() ?? throw new Exception(string.Format("Nenhum objeto {0} encontrado no stream!", nomeDoNode));
+            return xmlString.ToString();
+        }
+
+        /// <summary>
+        ///     Obtém um node XML no formato string de um arquivo XML. Util por exemplo, para extrair uma NFe de um XML contendo um
+        ///     nfeproc, enviNFe, etc.
+        /// </summary>
+        /// <param name="nomeDoNode"></param>
+        /// <param name="arquivoXml"></param>
+        /// <returns>Retorna a string contendo o node XML cujo nome foi passado no parâmetro nomeDoNode</returns>
+        public async static Task<string> ObterNodeDeArquivoXmlAsync(string nomeDoNode, string arquivoXml, CancellationToken cancellationToken = default)
+        {
+            using TextReader reader = new StreamReader(arquivoXml);
+            var xmlDoc = await XDocument.LoadAsync(reader, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+            var xmlString = (from d in xmlDoc.Descendants()
+                             where d.Name.LocalName == nomeDoNode
+                             select d).FirstOrDefault() ?? throw new Exception(String.Format("Nenhum objeto {0} encontrado no arquivo {1}!", nomeDoNode, arquivoXml));
+            return xmlString.ToString();
+        }
+#endif
     }
 }
