@@ -6,10 +6,8 @@ using NFe.Classes.Informacoes.Identificacao.Tipos;
 using NFe.Classes.Servicos.Consulta;
 using NFe.Danfe.Base.NFCe;
 using NFe.Danfe.Base.NFe;
-using NFe.Utils;
 using NFe.Utils.InformacoesSuplementares;
 using System;
-using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -17,11 +15,11 @@ namespace Shared.DFe.Danfe
 {
     public static class DanfeSharedHelper
     {
-        public static Report GenerateDanfeNfceReport(nfeProc proc, ConfiguracaoDanfeNfce configuracaoDanfeNfce, string cIdToken, string csc, byte[] frx, string arquivoRelatorio, string textoRodape = "")
+        public static Shared.Classes.Report.Report GenerateDanfeNfceReport(nfeProc proc, ConfiguracaoDanfeNfce configuracaoDanfeNfce, string cIdToken, string csc, byte[] frx, string arquivoRelatorio, string textoRodape = "")
         {
             //Define as variáveis que serão usadas no relatório (dúvidas a respeito do fast reports consulte a documentação em https://www.fast-report.com/pt/product/fast-report-net/documentation/)
 
-            Report relatorio = new Report();            
+            Shared.Classes.Report.Report relatorio = new();            
 
             if (!string.IsNullOrEmpty(arquivoRelatorio))
                 relatorio.Load(arquivoRelatorio);
@@ -69,7 +67,7 @@ namespace Shared.DFe.Danfe
             {
 #if !openfastreport && !fastskia
                 /*Se a NFe for autorizada, mesmo que seja em contingência, imprime somente uma via - devendo o usuario enviar 2 copias para a impressora*/
-                relatorio.PrintSettings.Copies = (proc.NFe.infNFe.ide.tpEmis == TipoEmissao.teNormal | (proc.protNFe != null && proc.protNFe.infProt != null && NfeSituacao.Autorizada(proc.protNFe.infProt.cStat))/*Se a NFe for autorizada, mesmo que seja em contingência, imprime somente uma via*/ ) ? 1 : 2;
+                //relatorio.PrintSettings.Copies = (proc.NFe.infNFe.ide.tpEmis == TipoEmissao.teNormal | (proc.protNFe != null && proc.protNFe.infProt != null && NfeSituacao.Autorizada(proc.protNFe.infProt.cStat))/*Se a NFe for autorizada, mesmo que seja em contingência, imprime somente uma via*/ ) ? 1 : 2;
 #else
                 //sem suporte do PrintSettings para o openfastreport
                 throw new Exception("configuracaoDanfeNfce.SegundaViaContingencia não suportado no OpenFastReport apenas no FastReport");
@@ -79,11 +77,11 @@ namespace Shared.DFe.Danfe
             return relatorio;
         }
 
-        public static Report GenerateDanfeFrEventoReport(nfeProc proc, procEventoNFe procEventoNFe, ConfiguracaoDanfeNfe configuracaoDanfeNfe, byte[] frx, string desenvolvedor, string arquivoRelatorio)
+        public static Shared.Classes.Report.Report GenerateDanfeFrEventoReport(nfeProc proc, procEventoNFe procEventoNFe, ConfiguracaoDanfeNfe configuracaoDanfeNfe, byte[] frx, string desenvolvedor, string arquivoRelatorio)
         {
             //Define as variáveis que serão usadas no relatório (dúvidas a respeito do fast reports consulte a documentação em https://www.fast-report.com/pt/product/fast-report-net/documentation/)
 
-            Report relatorio = new Report(); 
+            Shared.Classes.Report.Report relatorio = new(); 
             
             if (!string.IsNullOrEmpty(arquivoRelatorio))
                 relatorio.Load(arquivoRelatorio);
@@ -101,11 +99,11 @@ namespace Shared.DFe.Danfe
             return relatorio;
         }
 
-        public static Report GenerateDanfeFrNfeReport(nfeProc proc, ConfiguracaoDanfeNfe configuracaoDanfeNfe, byte[] frx, string desenvolvedor, string arquivoRelatorio)
+        public static Shared.Classes.Report.Report GenerateDanfeFrNfeReport(nfeProc proc, ConfiguracaoDanfeNfe configuracaoDanfeNfe, byte[] frx, string desenvolvedor, string arquivoRelatorio)
         {
             //Define as variáveis que serão usadas no relatório (dúvidas a respeito do fast reports consulte a documentação em https://www.fast-report.com/pt/product/fast-report-net/documentation/)
 
-            Report relatorio = new Report();
+            Shared.Classes.Report.Report relatorio = new();
 
             if (!string.IsNullOrEmpty(arquivoRelatorio))
                 relatorio.Load(arquivoRelatorio);
@@ -193,7 +191,7 @@ namespace Shared.DFe.Danfe
                 case TipoEmissao.teSVCAN:
                 case TipoEmissao.teSVCRS:
                     contingenciaDescricao = "PROTOCOLO DE AUTORIZAÇÃO DE USO";
-                    contingenciaValor = ((proc.protNFe == null || proc.protNFe.infProt == null || string.IsNullOrEmpty(proc.protNFe.infProt.nProt)) ? "NFe sem Autorização de Uso da SEFAZ" : string.Format("{0} - {1:dd/MM/yyyy HH:mm:ss}", proc.protNFe.infProt.nProt, proc.protNFe.infProt.dhRecbto));
+                    contingenciaValor = (proc.protNFe == null || proc.protNFe.infProt == null || string.IsNullOrEmpty(proc.protNFe.infProt.nProt)) ? "NFe sem Autorização de Uso da SEFAZ" : string.Format("{0} - {1:dd/MM/yyyy HH:mm:ss}", proc.protNFe.infProt.nProt, proc.protNFe.infProt.dhRecbto);
                     if (configuracaoDanfeNfe.DocumentoCancelado || (proc.protNFe != null && proc.protNFe.infProt != null && (proc.protNFe.infProt.cStat == 101 || proc.protNFe.infProt.cStat == 151 || proc.protNFe.infProt.cStat == 155)))
                     {
                         contingenciaDescricao = "PROTOCOLO DE HOMOLOGAÇÃO DO CANCELAMENTO";

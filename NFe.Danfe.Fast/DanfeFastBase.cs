@@ -1,5 +1,7 @@
-﻿using FastReport;
+﻿
+using FastReport.Export.Image;
 using FastReport.Export.Pdf;
+using Shared.Classes.Report;
 using System;
 using System.IO;
 
@@ -15,7 +17,7 @@ namespace NFe.Danfe.Fast
         /// <param name="modal">Se true, exibe a visualização em Modal. O modo modal está disponível apenas para WinForms</param>
         public void Visualizar(bool modal = true)
         {
-            Relatorio.Show(modal);
+            //Relatorio.Show(modal);
         }
 
         /// <summary>
@@ -25,7 +27,7 @@ namespace NFe.Danfe.Fast
         /// <param name="modal">Se true, exibe a visualização em Modal. O modo modal está disponível apenas para WinForms</param>
         public void ExibirDesign(bool modal = false)
         {
-            Relatorio.Design(modal);
+            //Relatorio.Design(modal);
         }
 
         /// <summary>
@@ -35,8 +37,8 @@ namespace NFe.Danfe.Fast
         /// <param name="impressora">Passe a string com o nome da impressora para imprimir diretamente em determinada impressora. Caso contrário, a impressão será feita na impressora que estiver como padrão</param>
         public void Imprimir(bool exibirDialogo = true, string impressora = "")
         {
-            Relatorio.PrintSettings.ShowDialog = exibirDialogo;
-            Relatorio.PrintSettings.Printer = impressora;
+            //Relatorio.PrintSettings.ShowDialog = exibirDialogo;
+            //Relatorio.PrintSettings.Printer = impressora;
             Relatorio.Print();
         }
 
@@ -94,6 +96,23 @@ namespace NFe.Danfe.Fast
             Relatorio.Prepare();
             Relatorio.Export(exportBase, outputStream);
             outputStream.Position = 0;
+        }
+        /// <summary>
+        /// Converte o DANFE para Imagem e salva-o no caminho/arquivo indicado
+        /// </summary>
+        /// <param name="arquivo">Caminho/arquivo onde deve ser salvo a imagem do DANFE</param>
+        /// <param name="format">Formato</param>
+        public void ExportarImagem(string arquivo, ImageExportFormat format = ImageExportFormat.Png)
+        {
+            Relatorio.Prepare();
+            Relatorio.Export(new ImageExport
+            {
+                ImageFormat = format,
+                JpegQuality = 100,
+                Resolution = 310,
+                HasMultipleFiles = false,
+                MonochromeTiff = true
+            }, arquivo);
         }
     }
 }

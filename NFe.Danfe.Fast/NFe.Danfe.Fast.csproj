@@ -1,22 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>net462</TargetFrameworks>
-		
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>net7.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Dlls\FastReport.Bars.dll" />
+    <None Remove="Dlls\FastReport.dll" />
+    <None Remove="Dlls\FastReport.Editor.dll" />
+  </ItemGroup>
 
-	<!--Todos que iniciam com 4... -->
-	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<Reference Include="System.Windows.Forms.dll" />
-		<Reference Include="Dlls\FastReport.dll" />
-		<Reference Include="Dlls\FastReport.Bars.dll" />
-		<Reference Include="Dlls\FastReport.Editor.dll" />
-	</ItemGroup>
+  <!--Todos que iniciam com 4... -->
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Reference Include="System.Windows.Forms.dll" />
+    <Reference Include="Dlls\FastReport.Bars.dll" />
+    <Reference Include="Dlls\FastReport.Editor.dll" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\NFe.Danfe.Base\NFe.Danfe.Base.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NFe.Danfe.Base\NFe.Danfe.Base.csproj" />
+  </ItemGroup>
 
-	<Import Project="..\Shared.NFe.Danfe\Shared.NFe.Danfe.projitems" Label="Shared" />
+  <ItemGroup>
+    <Folder Include="Dlls\" />
+  </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FastReport.Core" Version="2024.1.7" />
+    <PackageReference Include="FastReport.Data.MsSql" Version="2024.1.0" />
+    <PackageReference Include="Freeware.Pdf2Png" Version="1.0.1" />
+  </ItemGroup>
+
+  <Import Project="..\Shared.NFe.Danfe\Shared.NFe.Danfe.projitems" Label="Shared" />
+  <Import Project="..\..\Report\Report.projitems" Label="Shared" />
 </Project>
